@@ -9,14 +9,7 @@ jobs:
   buildAUR:
     strategy:
       matrix:
-        repos: [osu-lazer, weechat-notify-send, fpp, redsocks, git-cola, realesrgan-ncnn-vulkan, python-torchaudio, python-torchinfo, python-rapidocr, ludusavi]
-        include:
-          - repos: git-cola
-            preinstall-pkgs: "at-spi2-core"
-          - repos: realesrgan-ncnn-vulkan
-            preinstall-pkgs: "vulkan-intel"
-          - repos: python-rapidocr
-            preinstall-pkgs: "python-onnxruntime-cpu"
+        repos: [ayugram-desktop]
 
       fail-fast: false
       
@@ -28,7 +21,6 @@ jobs:
     - uses: ./build-aur-action
       with:
         repo-name: ${{ matrix.repos }}
-        preinstallPkgs: ${{ matrix.preinstall-pkgs }}
     
     - uses: actions/upload-artifact@v4
       with:
@@ -43,32 +35,4 @@ jobs:
         artifacts: "./*/*.zst"
         token: ${{ secrets.GITHUB_TOKEN }}
           
-  uploadToOneDrive:      
-    runs-on: ubuntu-latest
-    if: always()
-    needs: [buildAUR]
-
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/download-artifact@v4
-        id: download
-
-      - name: Display structure of downloaded files
-        run: ls -R ${{ steps.download.outputs.download-path }}
-      
-      - uses: ./create-db-and-upload-action
-        with:
-          RCLONE_CONFIG_CONTENT: ${{ secrets.RCLONE_CONFIG }}
-          RCLONE_CONFIG_NAME: onedrive
-          dest_path: /archrepo
-          repo_name: vifly
-          gpg-privatekey: ${{ secrets.gpg_private_key }}
-          local_path: ${{ steps.download.outputs.download-path }}
-
-      - uses: ncipollo/release-action@v1
-        with:
-          allowUpdates: true
-          tag: "packages"
-          artifacts: "./upload_packages/*.sig,./upload_packages/*.files,./upload_packages/*.db,./upload_packages/*.tar.gz"
-          token: ${{ secrets.GITHUB_TOKEN }}
+  
